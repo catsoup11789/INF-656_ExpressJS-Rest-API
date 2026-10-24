@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Witching & Wonder | Browse</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Homemade+Apple&family=Montserrat:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="icon" type="image/png" href="/images/favicon.png" />
+  </head>
+  <body>
+    <div class="browse-shell">
+      <header class="browse-header">
+        <div class="browse-brand">Witching & Wonder</div>
+        <a class="back-link" href="/">Back home</a>
+      </header>
+
+      <main class="browse-main">
+        <p class="browse-subhead">Haunted wares</p>
+
+        <div class="toolbar" aria-label="Item filters">
+          <div class="filter-group">
+            <label for="searchInput">Search</label>
+            <input id="searchInput" type="text" placeholder="Find a spellbound item" />
+          </div>
+
+          <div class="filter-group">
+            <label for="categoryFilter">Category</label>
+            <select id="categoryFilter">
+              <option value="">All</option>
+              <option value="Rituals">Rituals</option>
+              <option value="Apparel">Apparel</option>
+              <option value="Curios">Curios</option>
+              <option value="Jewelry">Jewelry</option>
+              <option value="Spellbook">Spellbook</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="sortField">Sort by</label>
+            <select id="sortField">
+              <option value="id">Newest</option>
+              <option value="name">Name</option>
+              <option value="price">Price</option>
+              <option value="category">Category</option>
+            </select>
+          </div>
+
+          <button type="button" class="reset-button" id="resetFilters">Reset</button>
+        </div>
+
+        <section id="items" class="items-grid" aria-live="polite"></section>
+      </main>
+    </div>
+
+    <script>
+      const itemsContainer = document.getElementById('items');
+      const categoryFilter = document.getElementById('categoryFilter');
+      const sortField = document.getElementById('sortField');
+      const searchInput = document.getElementById('searchInput');
+
+      const renderItems = (items) => {
+        if (!items.length) {
+          itemsContainer.innerHTML = '<p class="empty-state">No haunted treasures match your filters.</p>';
+          return;
+        }
+
+        itemsContainer.innerHTML = items
+          .map(
+            (item) => `
+              <article class="item-card">
+                <span class="item-category">${item.category}</span>
+                <h2 class="item-name">${item.name}</h2>
+                <div class="item-price">$${Number(item.price).toFixed(2)}</div>
+              </article>
+            `
+          )
+          .join('');
+      };
+
+      const loadItems = () => {
+        const params = new URLSearchParams();
+
+        if (categoryFilter.value) {
+          params.set('category', categoryFilter.value);
+        }
+
+        if (searchInput.value.trim()) {
+          params.set('name', searchInput.value.trim());
+        }
+
+        params.set('sort', sortField.value);
+
+        fetch(`/api/items?${params.toString()}`)
+          .then((response) => response.json())
+          .then((result) => {
+            renderItems(result.data || []);
+          })
+          .catch((error) => {
+            console.error('Error loading items:', error);
+            itemsContainer.innerHTML = '<p class="empty-state">Unable to load the Hollow inventory.</p>';
+          });
+      };
+
+      const resetFilters = () => {
+        categoryFilter.value = '';
+        sortField.value = 'id';
+        searchInput.value = '';
+        loadItems();
+      };
+
+      [categoryFilter, sortField].forEach((element) => {
+        element.addEventListener('change', loadItems);
+      });
+
+      searchInput.addEventListener('input', loadItems);
+      document.getElementById('resetFilters').addEventListener('click', resetFilters);
+
+      loadItems();
+    </script>
+  </body>
+</html>

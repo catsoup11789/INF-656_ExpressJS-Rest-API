@@ -1,0 +1,122 @@
+[
+  {
+    "id": 1,
+    "name": "Moonlit Candle",
+    "category": "Rituals",
+    "price": 16.5
+  },
+  {
+    "id": 2,
+    "name": "Black Velvet Cloak",
+    "category": "Apparel",
+    "price": 64.0
+  },
+  {
+    "id": 3,
+    "name": "Witchwood Herb Bundle",
+    "category": "Curios",
+    "price": 22.75
+  },
+  {
+    "id": 4,
+    "name": "Moonstone Charm",
+    "category": "Jewelry",
+    "price": 28.0
+  },
+  {
+    "id": 5,
+    "name": "Night Bloom Journal",
+    "category": "Spellbook",
+    "price": 18.99
+  },
+  {
+    "id": 6,
+    "name": "Crescent Wax Melt",
+    "category": "Rituals",
+    "price": 14.25
+  },
+  {
+    "id": 7,
+    "name": "Midnight Lace Gloves",
+    "category": "Apparel",
+    "price": 31.5
+  },
+  {
+    "id": 8,
+    "name": "Hollow Oak Incense",
+    "category": "Curios",
+    "price": 19.75
+  },
+  {
+    "id": 9,
+    "name": "Obsidian Ring",
+    "category": "Jewelry",
+    "price": 36.0
+  },
+  {
+    "id": 10,
+    "name": "Spellbound Tarot Deck",
+    "category": "Spellbook",
+    "price": 29.99
+  },
+  {
+    "id": 11,
+    "name": "Lantern of Lost Paths",
+    "category": "Rituals",
+    "price": 42.5
+  },
+  {
+    "id": 12,
+    "name": "Raven Feather Shawl",
+    "category": "Apparel",
+    "price": 54.0
+  },
+  {
+    "id": 13,
+    "name": "Rosemary Smoke Powder",
+    "category": "Curios",
+    "price": 17.5
+  },
+  {
+    "id": 14,
+    "name": "Silver Pentacle Pendant",
+    "category": "Jewelry",
+    "price": 33.25
+  },
+  {
+    "id": 15,
+    "name": "Hush of the Hollow Grimoire",
+    "category": "Spellbook",
+    "price": 24.75
+  },
+  {
+    "id": 16,
+    "name": "Smoked Amber Taper",
+    "category": "Rituals",
+    "price": 13.0
+  },
+  {
+    "id": 17,
+    "name": "Dark Moss Corset",
+    "category": "Apparel",
+    "price": 58.5
+  },
+  {
+    "id": 18,
+    "name": "Foxglove Potion Kit",
+    "category": "Curios",
+    "price": 27.0
+  },
+  {
+    "id": 19,
+    "name": "Moon Phase Necklace",
+    "category": "Jewelry",
+    "price": 39.99
+  },
+  {
+    "id": 20,
+    "name": "The Witching Almanac",
+    "category": "Spellbook",
+    "price": 21.5
+  }
+]

@@ -3,7 +3,7 @@
   "info": {
     "title": "Witching & Wonder API",
     "version": "1.0.0",
-    "description": "Halloween-inspired storefront API with item browsing, filtering, and sorting for Witching & Wonder."
+    "description": "Halloween-inspired storefront API with item browsing, filtering, and MongoDB-backed CRUD for Witching & Wonder."
   },
   "servers": [
     {
@@ -67,7 +67,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": ["id", "name", "category", "price"]
+              "enum": ["name", "category", "price"]
             },
             "description": "Sort field"
           },
@@ -153,13 +153,14 @@
           "in": "path",
           "required": true,
           "schema": {
-            "type": "integer"
+            "type": "string",
+            "example": "507f1f77bcf86cd799439011"
           },
-          "description": "ID of the item"
+          "description": "MongoDB ObjectId of the item"
         }
       ],
       "get": {
-        "summary": "Get one item by ID",
+        "summary": "Get one item by MongoDB ObjectId",
         "responses": {
           "200": {
             "description": "Item found",
@@ -179,13 +180,16 @@
               }
             }
           },
+          "400": {
+            "description": "Invalid MongoDB ObjectId"
+          },
           "404": {
             "description": "Item not found"
           }
         }
       },
       "patch": {
-        "summary": "Update an item by ID",
+        "summary": "Update an item by MongoDB ObjectId",
         "requestBody": {
           "required": true,
           "content": {
@@ -215,16 +219,22 @@
               }
             }
           },
+          "400": {
+            "description": "Invalid ObjectId or invalid payload"
+          },
           "404": {
             "description": "Item not found"
           }
         }
       },
       "delete": {
-        "summary": "Delete an item by ID",
+        "summary": "Delete an item by MongoDB ObjectId",
         "responses": {
           "204": {
             "description": "Item deleted successfully"
+          },
+          "400": {
+            "description": "Invalid MongoDB ObjectId"
           },
           "404": {
             "description": "Item not found"
@@ -248,27 +258,27 @@
       "Item": {
         "type": "object",
         "required": [
-          "id",
+          "_id",
           "name",
           "category",
           "price"
         ],
         "properties": {
-          "id": {
-            "type": "integer",
-            "example": 1
+          "_id": {
+            "type": "string",
+            "example": "507f1f77bcf86cd799439011"
           },
           "name": {
             "type": "string",
-            "example": "Notebook"
+            "example": "Moonlit Candle"
           },
           "category": {
             "type": "string",
-            "example": "Office"
+            "example": "Rituals"
           },
           "price": {
             "type": "number",
-            "example": 12.5
+            "example": 16.5
           }
         }
       },
@@ -282,15 +292,15 @@
         "properties": {
           "name": {
             "type": "string",
-            "example": "Keyboard"
+            "example": "Moonstone Charm"
           },
           "category": {
             "type": "string",
-            "example": "Tech"
+            "example": "Jewelry"
           },
           "price": {
             "type": "number",
-            "example": 59.99
+            "example": 28.0
           }
         }
       },
@@ -299,15 +309,15 @@
         "properties": {
           "name": {
             "type": "string",
-            "example": "Keyboard"
+            "example": "Moonstone Charm"
           },
           "category": {
             "type": "string",
-            "example": "Tech"
+            "example": "Jewelry"
           },
           "price": {
             "type": "number",
-            "example": 15.99
+            "example": 28.0
           }
         }
       }

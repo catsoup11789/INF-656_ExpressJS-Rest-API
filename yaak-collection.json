@@ -1,0 +1,316 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Witching & Wonder API",
+    "version": "1.0.0",
+    "description": "Halloween-inspired storefront API with item browsing, filtering, and sorting for Witching & Wonder."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Homepage",
+        "responses": {
+          "200": {
+            "description": "Serves the homepage HTML"
+          }
+        }
+      }
+    },
+    "/api/items": {
+      "get": {
+        "summary": "Get all items with optional filtering and sorting",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter items by category"
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Search by item name"
+          },
+          {
+            "name": "minPrice",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            },
+            "description": "Minimum price"
+          },
+          {
+            "name": "maxPrice",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            },
+            "description": "Maximum price"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["id", "name", "category", "price"]
+            },
+            "description": "Sort field"
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"]
+            },
+            "description": "Sort direction"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns all items",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "count": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Item"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new item",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItemInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Item created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Item"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body"
+          }
+        }
+      }
+    },
+    "/api/items/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          },
+          "description": "ID of the item"
+        }
+      ],
+      "get": {
+        "summary": "Get one item by ID",
+        "responses": {
+          "200": {
+            "description": "Item found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Item"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Item not found"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update an item by ID",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItemInputPartial"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Item updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Item"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Item not found"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete an item by ID",
+        "responses": {
+          "204": {
+            "description": "Item deleted successfully"
+          },
+          "404": {
+            "description": "Item not found"
+          }
+        }
+      }
+    },
+    "/does-not-exist": {
+      "get": {
+        "summary": "Invalid route test",
+        "responses": {
+          "404": {
+            "description": "Route not found"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Item": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "category",
+          "price"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "Notebook"
+          },
+          "category": {
+            "type": "string",
+            "example": "Office"
+          },
+          "price": {
+            "type": "number",
+            "example": 12.5
+          }
+        }
+      },
+      "ItemInput": {
+        "type": "object",
+        "required": [
+          "name",
+          "category",
+          "price"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Keyboard"
+          },
+          "category": {
+            "type": "string",
+            "example": "Tech"
+          },
+          "price": {
+            "type": "number",
+            "example": 59.99
+          }
+        }
+      },
+      "ItemInputPartial": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Keyboard"
+          },
+          "category": {
+            "type": "string",
+            "example": "Tech"
+          },
+          "price": {
+            "type": "number",
+            "example": 15.99
+          }
+        }
+      }
+    }
+  }
+}

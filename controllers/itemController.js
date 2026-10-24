@@ -1,155 +1,203 @@
-const fs = require('fs');
-const path = require('path');
+const { ObjectId } = require('mongodb');
+const { getDb } = require('../config/db');
 
-const dataFilePath = path.join(__dirname, '..', 'data', 'items.json');
+const getCollection = () => getDb().collection('items');
 
-const loadItems = () => {
-  const rawData = fs.readFileSync(dataFilePath, 'utf8');
-  return JSON.parse(rawData);
-};
+const getAllItems = async (req, res, next) => {
+  try {
+    const { category, minPrice, maxPrice, sort, order, name } = req.query;
+    const collection = getCollection();
+    let query = {};
 
-let items = loadItems();
-
-const getAllItems = (req, res) => {
-  const { category, minPrice, maxPrice, sort, order, name } = req.query;
-
-  let filteredItems = [...items];
-
-  if (category) {
-    filteredItems = filteredItems.filter(
-      (item) => item.category.toLowerCase() === String(category).toLowerCase()
-    );
-  }
-
-  if (name) {
-    const term = String(name).toLowerCase();
-    filteredItems = filteredItems.filter((item) =>
-      item.name.toLowerCase().includes(term)
-    );
-  }
-
-  if (minPrice !== undefined) {
-    const min = Number(minPrice);
-    if (!Number.isNaN(min)) {
-      filteredItems = filteredItems.filter((item) => Number(item.price) >= min);
+    if (category) {
+      query.category = { $regex: new RegExp(String(category), 'i') };
     }
-  }
 
-  if (maxPrice !== undefined) {
-    const max = Number(maxPrice);
-    if (!Number.isNaN(max)) {
-      filteredItems = filteredItems.filter((item) => Number(item.price) <= max);
+    if (name) {
+      query.name = { $regex: new RegExp(String(name), 'i') };
     }
-  }
 
-  const validSortFields = ['id', 'name', 'category', 'price'];
-  const requestedSort = sort ? String(sort).toLowerCase() : 'id';
-  const requestedOrder = order ? String(order).toLowerCase() : 'asc';
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      query.price = {};
 
-  if (validSortFields.includes(requestedSort)) {
-    filteredItems.sort((a, b) => {
-      const aValue = requestedSort === 'price' ? Number(a.price) : a[requestedSort];
-      const bValue = requestedSort === 'price' ? Number(b.price) : b[requestedSort];
-
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return aValue.localeCompare(bValue);
+      if (minPrice !== undefined) {
+        const min = Number(minPrice);
+        if (!Number.isNaN(min)) {
+          query.price.$gte = min;
+        }
       }
 
-      return aValue - bValue;
-    });
-
-    if (requestedOrder === 'desc') {
-      filteredItems.reverse();
+      if (maxPrice !== undefined) {
+        const max = Number(maxPrice);
+        if (!Number.isNaN(max)) {
+          query.price.$lte = max;
+        }
+      }
     }
-  }
 
-  res.status(200).json({
-    success: true,
-    count: filteredItems.length,
-    data: filteredItems,
-  });
+    let cursor = collection.find(query);
+
+    const validSortFields = ['name', 'category', 'price'];
+    const requestedSort = sort ? String(sort).toLowerCase() : 'name';
+    const requestedOrder = order ? String(order).toLowerCase() : 'asc';
+
+    if (validSortFields.includes(requestedSort)) {
+      cursor = cursor.sort({ [requestedSort]: requestedOrder === 'desc' ? -1 : 1 });
+    }
+
+    const items = await cursor.toArray();
+
+    return res.status(200).json({
+      success: true,
+      count: items.length,
+      data: items,
+    });
+  } catch (error) {
+    return next(error);
+  }
 };
 
-const getOneItem = (req, res) => {
-  const itemId = Number(req.params.id);
-  const item = items.find((entry) => entry.id === itemId);
+const getOneItem = async (req, res, next) => {
+  try {
+    const { id } = req.params;
 
-  if (!item) {
-    return res.status(404).json({
-      success: false,
-      message: 'Item not found',
+    if (!ObjectId.isValid(id)) {
+      return next({
+        statusCode: 400,
+        message: 'Invalid MongoDB ID format',
+      });
+    }
+
+    const item = await getCollection().findOne({ _id: new ObjectId(id) });
+
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: 'Item not found',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: item,
     });
+  } catch (error) {
+    return next(error);
   }
-
-  return res.status(200).json({
-    success: true,
-    data: item,
-  });
 };
 
-const createItem = (req, res, next) => {
-  const { name, category, price } = req.body;
+const createItem = async (req, res, next) => {
+  try {
+    const { name, category, price } = req.body;
 
-  if (!name || !category || price === undefined) {
-    return next({
-      statusCode: 400,
-      message: 'Name, category, and price are required',
+    if (!name || !category || price === undefined || Number.isNaN(Number(price))) {
+      return next({
+        statusCode: 400,
+        message: 'Name, category, and a valid numeric price are required',
+      });
+    }
+
+    const newItem = {
+      name: String(name).trim(),
+      category: String(category).trim(),
+      price: Number(price),
+    };
+
+    const result = await getCollection().insertOne(newItem);
+
+    return res.status(201).json({
+      success: true,
+      data: { _id: result.insertedId, ...newItem },
     });
+  } catch (error) {
+    return next(error);
   }
-
-  const newId = items.length ? Math.max(...items.map((item) => item.id)) + 1 : 1;
-  const newItem = {
-    id: newId,
-    name,
-    category,
-    price,
-  };
-
-  items.push(newItem);
-
-  return res.status(201).json({
-    success: true,
-    data: newItem,
-  });
 };
 
-const updateItem = (req, res) => {
-  const itemId = Number(req.params.id);
-  const itemIndex = items.findIndex((item) => item.id === itemId);
+const updateItem = async (req, res, next) => {
+  try {
+    const { id } = req.params;
 
-  if (itemIndex === -1) {
-    return res.status(404).json({
-      success: false,
-      message: 'Item not found',
+    if (!ObjectId.isValid(id)) {
+      return next({
+        statusCode: 400,
+        message: 'Invalid MongoDB ID format',
+      });
+    }
+
+    if (req.body._id) {
+      return next({
+        statusCode: 400,
+        message: 'MongoDB _id cannot be changed',
+      });
+    }
+
+    const updateFields = { ...req.body };
+
+    if (Object.keys(updateFields).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No update fields provided',
+      });
+    }
+
+    if (updateFields.price !== undefined && Number.isNaN(Number(updateFields.price))) {
+      return next({
+        statusCode: 400,
+        message: 'Price must be numeric',
+      });
+    }
+
+    if (updateFields.price !== undefined) {
+      updateFields.price = Number(updateFields.price);
+    }
+
+    const updatedItem = await getCollection().findOneAndUpdate(
+      { _id: new ObjectId(id) },
+      { $set: updateFields },
+      { returnDocument: 'after' }
+    );
+
+    if (!updatedItem) {
+      return res.status(404).json({
+        success: false,
+        message: 'Item not found',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: updatedItem,
     });
+  } catch (error) {
+    return next(error);
   }
-
-  const updatedItem = {
-    ...items[itemIndex],
-    ...req.body,
-  };
-
-  items[itemIndex] = updatedItem;
-
-  return res.status(200).json({
-    success: true,
-    data: updatedItem,
-  });
 };
 
-const deleteItem = (req, res) => {
-  const itemId = Number(req.params.id);
-  const initialLength = items.length;
-  items = items.filter((item) => item.id !== itemId);
+const deleteItem = async (req, res, next) => {
+  try {
+    const { id } = req.params;
 
-  if (items.length === initialLength) {
-    return res.status(404).json({
-      success: false,
-      message: 'Item not found',
-    });
+    if (!ObjectId.isValid(id)) {
+      return next({
+        statusCode: 400,
+        message: 'Invalid MongoDB ID format',
+      });
+    }
+
+    const result = await getCollection().deleteOne({ _id: new ObjectId(id) });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Item not found',
+      });
+    }
+
+    return res.status(204).send();
+  } catch (error) {
+    return next(error);
   }
-
-  return res.status(204).send();
 };
 
 module.exports = {
